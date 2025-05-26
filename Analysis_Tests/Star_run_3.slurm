@@ -1,0 +1,38 @@
+#!/bin/bash
+#SBATCH --job-name=STAR_u0962361           # Job name
+#SBATCH --output=STAR_%j.log      # Standard output and error log (%j will be replaced by job id)
+#SBATCH --ntasks=1                     # Number of tasks (1 for indexing)
+#SBATCH --cpus-per-task=16              # Number of CPU cores per task (adjust based on your cluster's resources)
+#SBATCH --mem=64G                      # Increase memory to 32GB (adjust based on your data size)
+#SBATCH --time 08:00:00                # Time limit (adjust as necessary)
+#SBATCH --partition=notchpeak-shared-short # Specify partition
+#SBATCH --account=notchpeak-shared-short    # Specify account
+
+# Load STAR module (if available)
+module load star
+
+# Set variables
+GENOME_DIR="star_index_2"   # Path to your STAR genome index directory
+READS_1="SRR24289602_1_trimmed.fastq"  # NOTUSED FOR MY DATA SET
+READS_2="/scratch/general/vast/u0962361/working/fastq_folder/trimmed_data/SRR24289603/SRR24289603_2_trimmed.fastq" 
+OUTPUT_DIR="star_output_only_read_2_603"       # Directory where you want the output to go
+OUTPUT_PREFIX="output_2_only_read_2_603"  # Prefix for output files
+
+# Make output directory if it doesn't exist
+mkdir -p $OUTPUT_DIR
+
+# Run STAR alignment
+STAR --runThreadN $SLURM_CPUS_PER_TASK \
+     --genomeDir $GENOME_DIR \
+     --readFilesIn $READS_2 \
+     --outFileNamePrefix $OUTPUT_DIR/$OUTPUT_PREFIX \
+     --outSAMtype BAM SortedByCoordinate \
+     --quantMode GeneCounts \
+     --outReadsUnmapped Fastx \
+     --outSAMunmapped Within \
+     --outSAMattributes NH HI AS nM NM MD \
+     --outFilterMismatchNmax 10 \
+     --outFilterMismatchNoverLmax 0.3 
+
+# Print completion message
+echo "STAR alignment completed. Results stored in $OUTPUT_DIR.
